@@ -1,0 +1,40 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "pdf2md-agent"
+version = "0.1.0"
+description = "Local PDF-to-Markdown ingestion pipeline for AI and agent research"
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+dependencies = [
+  "pymupdf>=1.24",
+  "pymupdf4llm",
+  "typer>=0.12",
+  "pydantic>=2",
+  "pyyaml>=6",
+  "rich>=13",
+]
+
+[project.optional-dependencies]
+docling = ["docling"]
+marker = []
+grobid = ["httpx>=0.27"]
+test = ["pytest", "reportlab"]
+
+[project.scripts]
+pdf2md-agent = "pdf2md_agent.cli:app"
+
+[project.urls]
+Homepage = "https://github.com/BoyangGuo1789/pdf2md-agent"
+Repository = "https://github.com/BoyangGuo1789/pdf2md-agent"
+Issues = "https://github.com/BoyangGuo1789/pdf2md-agent/issues"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
+markers = [
+  "ocr: tests that require OCRmyPDF and Tesseract",
+]

@@ -1,0 +1,19 @@
+engine: auto
+ocr: auto
+ocr_languages: eng
+render_pages: true
+extract_assets: true
+chunk: true
+chunk_size: 1200
+chunk_overlap: 150
+strict: false
+engines:
+  prefer:
+    - pymupdf4llm
+    - docling
+    - text
+  marker_cli: marker_single
+  grobid_url: http://localhost:8070
+validation:
+  coverage_ratio_warn: 0.5
+  render_dpi: 200
