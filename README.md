@@ -1,7 +1,7 @@
 # pdf2md-agent
 
 <p align="center">
-  <strong>Traceable PDF-to-Markdown ingestion for AI agents, research assistants, and RAG pipelines.</strong>
+  <strong>Local, traceable PDF ingestion for GPT research workflows, AI agents, and RAG pipelines.</strong>
 </p>
 
 <p align="center">
@@ -14,22 +14,45 @@
   <a href="LICENSE"><img alt="License: MIT" src="https://img.shields.io/badge/License-MIT-green.svg"></a>
 </p>
 
-`pdf2md-agent` turns messy PDFs into auditable research bundles: Markdown for LLM reading, JSON for structured inspection, page images for visual fallback, chunks for retrieval, and logs that make conversion risk visible.
+Most research agents start with PDFs. The problem is that a PDF is not the document a language model wants to read.
 
-PDFs are not clean text documents. They are closer to page drawing instructions, and a single paper may mix multi-column layouts, headers, footers, footnotes, equations, charts, tables, references, scanned pages, embedded images, and ambiguous reading order. If an agent reads only one parser's text output, important context can disappear silently.
+PDFs are page layouts, not stable research context. A paper may contain columns, headers, footers, equations, tables, captions, references, scanned regions, and positioned text. When that layout is flattened by a single converter, important context can disappear silently while the downstream GPT workflow still produces confident answers.
 
-This project is built around a stricter target: **make extracted research material stable enough, traceable enough, and inspectable enough for downstream AI workflows.**
+`pdf2md-agent` turns that fragile first step into an auditable ingestion layer. It creates Markdown for the model to read, JSON for structured inspection, rendered page images for visual fallback, extracted assets for review, retrieval chunks for RAG, and manifests/logs that make conversion risk visible.
 
-## At a Glance
+Use it before asking GPT to summarize papers, compare related work, extract claims, build literature maps, or index PDFs into a retrieval system. The output is not just a `.md` file; it is a research bundle that agents can read, retrieve, cite, and humans can audit.
 
-| Need | What `pdf2md-agent` provides |
+## Why GPT Research Needs This Step
+
+| GPT research need | Why raw PDFs are not enough |
 | --- | --- |
-| LLM-readable text | Page-aware `document.md` with explicit anchors |
-| Reliable provenance | `manifest.json` with source hash, engine, outputs, warnings, and validation status |
-| Visual fallback | Rendered `pages/page_*.png` for layout-sensitive review |
-| RAG ingestion | `chunks/chunks.jsonl` with stable IDs, page spans, and source hashes |
-| Asset reuse | Extracted figures and basic tables when available |
-| Local processing | Deterministic conversion by default; no LLM calls are made |
+| Stable text | PDFs store visual layout, not clean reading-order text |
+| Reliable retrieval | RAG needs chunks with stable IDs, source hashes, and page spans |
+| Agent workflows | Agents need intermediate artifacts they can inspect, cite, and revisit |
+| Debuggable answers | Humans need to see whether an error came from parsing or reasoning |
+| Long-term reuse | Research pipelines should not re-parse the same PDF differently every time |
+
+## What You Get
+
+| Output | Purpose |
+| --- | --- |
+| `document.md` | Markdown formatted for LLM reading and downstream review |
+| `document.json` | Structured extraction output for programmatic inspection |
+| `manifest.json` | Bundle metadata, source hash, engine, warnings, and validation status |
+| `pages/page_*.png` | Visual fallback when text extraction is uncertain |
+| `figures/` and `tables/` | Extracted assets for review and reuse when available |
+| `chunks/chunks.jsonl` | Retrieval-ready chunks for RAG and agent pipelines |
+| `logs/` | Preflight and validation details so ingestion risk is not hidden |
+
+## Different From Ordinary PDF-to-Markdown
+
+| Ordinary converter | `pdf2md-agent` |
+| --- | --- |
+| Optimizes for one Markdown file | Optimizes for an auditable AI research bundle |
+| May hide page-order and extraction failures | Writes manifests, warnings, validation logs, and page renders |
+| Often loses citation context | Keeps page anchors, page spans, and source hashes |
+| Requires separate RAG preprocessing | Can emit retrieval-ready JSONL chunks |
+| Treats Markdown as the final truth | Treats Markdown as the readable layer, backed by structured and visual evidence |
 
 ## Quick Start
 
@@ -62,26 +85,13 @@ pdf2md-agent convert paper.pdf \
   --chunk
 ```
 
-## Why This Exists
+## Design Principle
 
-Many AI research workflows start by handing a PDF directly to a model or agent. That is convenient, but unstable. Different parsers can extract the same file in different orders, drop table content, miss captions, flatten formulas, or lose the page-level evidence needed for citation-aware answers.
-
-That creates practical failures:
-
-- important paragraphs, formulas, captions, or table content can be dropped;
-- multi-column papers can be read in the wrong order;
-- headings, paragraphs, lists, tables, and citations can lose structure;
-- model answers cannot be traced back to source pages;
-- mistakes are hard to debug because it is unclear whether the parser or the model failed;
-- downstream tasks may re-parse the same PDF differently.
-
-The bottleneck in AI auto-research is not only whether the model can summarize a paper. It is whether the material given to the model is complete, traceable, and reviewable enough to support reliable downstream work.
-
-The core design principle is:
+The core idea is simple:
 
 > Markdown is for the model to read, but it is not the only source of truth.
 
-Ordinary PDF-to-Markdown tools usually ask:
+Ordinary PDF-to-Markdown tools usually ask one question:
 
 ```text
 Can we extract the text from this PDF?
@@ -92,6 +102,8 @@ Can we extract the text from this PDF?
 ```text
 Can the extracted material be used by AI agents in a stable, traceable, and reviewable way?
 ```
+
+That changes the output shape. Each page should remain addressable. Chunks should carry page spans and source hashes. Tables and figures should become separate assets when possible. Suspicious pages should be renderable for visual review. Conversion should leave a manifest and validation report so failure modes are visible instead of hidden.
 
 ## Output Bundle
 
