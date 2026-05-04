@@ -4,6 +4,21 @@
 
 `pdf2md-agent` is a local PDF-to-Markdown ingestion pipeline for AI agents, research assistants, literature review workflows, and retrieval-augmented generation.
 
+It is not meant to be just another "PDF to text" converter. Its purpose is to turn messy PDFs into reliable research context that agents can read, cite, inspect, chunk, and reuse.
+
+Many AI research workflows start by handing a PDF directly to a model or an agent. That is convenient, but unstable. PDFs are not structured text documents; they are closer to page drawing instructions. A single file may contain multi-column layouts, headers, footers, footnotes, formulas, charts, tables, references, scanned pages, embedded images, and ambiguous reading order. Different parsers can extract the same PDF in different orders or silently miss important content.
+
+That causes practical failures:
+
+- important paragraphs, formulas, captions, or table content can be dropped;
+- multi-column papers can be read in the wrong order;
+- headings, paragraphs, lists, tables, and citations can lose structure;
+- model answers cannot be traced back to source pages;
+- mistakes are hard to debug because it is unclear whether the parser or the model failed;
+- every downstream task may re-parse the same PDF differently.
+
+The bottleneck in AI auto-research is not only whether the model can summarize a paper. It is whether the material given to the model is complete enough, traceable enough, and inspectable enough to support reliable downstream work.
+
 It converts a PDF into a traceable research bundle instead of trusting a single parser output:
 
 ```text
@@ -24,15 +39,33 @@ out_dir/
 
 ## Why
 
-PDF-to-Markdown conversion is lossy. Reading order, tables, equations, figures, and scanned pages can fail silently. `pdf2md-agent` keeps Markdown as the default LLM-readable output, while preserving provenance and validation signals so downstream agents can cite source pages and detect risky conversions.
+PDF-to-Markdown conversion is lossy. Reading order, tables, equations, figures, and scanned pages can fail silently. `pdf2md-agent` keeps Markdown as the default LLM-readable output, while preserving provenance, visual fallbacks, structured assets, and validation signals so downstream agents can cite source pages and detect risky conversions.
+
+The key idea is:
+
+> Markdown is for the model to read, but it is not the only source of truth.
+
+`document.md`, `document.json`, page images, table files, figure assets, chunks, manifests, and validation logs together form a research bundle. This bundle can be used for summarization, literature review, paper comparison, citation-aware Q&A, RAG indexing, multimodal verification, and knowledge-base construction.
+
+Ordinary PDF-to-Markdown tools usually ask:
+
+```text
+Can we extract the text from this PDF?
+```
+
+`pdf2md-agent` asks a stricter question:
+
+```text
+Can the extracted material be used by AI agents in a stable, traceable, and reviewable way?
+```
+
+That changes the design. Each page should remain addressable. Chunks should carry source hashes and page spans. Tables and figures should become separate assets when possible. Suspicious pages should be rendered for visual review. Conversion should leave a manifest and validation report so failures are visible instead of hidden.
 
 The pipeline is:
 
 ```text
 preflight -> optional OCR normalization -> layout-aware conversion -> asset extraction -> chunking -> validation -> bundle output
 ```
-
-For a longer Chinese project introduction for open-source sharing, see [pdf2md_agent_open_source_intro.md](pdf2md_agent_open_source_intro.md).
 
 ## Features
 
